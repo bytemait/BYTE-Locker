@@ -1,8 +1,10 @@
-from pathlib import Path
 import face_recognition
-import pickle
-from collections import Counter
 import cv2
+import pickle
+
+from pathlib import Path
+from collections import Counter
+
 import os
 import time
 
@@ -86,7 +88,7 @@ class FaceRecognizer:
             if filename.lower().endswith(('.png', '.jpg', 'jpeg')):
                 self.show(self.recognize_faces(cv2.imread(os.path.join(folder_path, filename))))
 
-    def cam_test(self):
+    def live_feed(self):
         cap = cv2.VideoCapture(0)
         start_time = time.time()
         frame_count = 0
@@ -122,4 +124,4 @@ if __name__ == '__main__':
     recognizer = FaceRecognizer()
     # recognizer.encode_known_faces()
     # recognizer.test()
-    recognizer.cam_test()
+    recognizer.live_feed()
