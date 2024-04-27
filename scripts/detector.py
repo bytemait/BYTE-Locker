@@ -9,7 +9,7 @@ import os
 import time
 
 class FaceRecognizer:
-    def __init__(self, encodings_location=Path("output/encodings.pkl")):
+    def __init__(self, encodings_location=Path("scripts/output/encodings.pkl")):
         self.encodings_location = encodings_location
 
     def encode_known_faces(self, model="hog"):
@@ -31,6 +31,7 @@ class FaceRecognizer:
             pickle.dump(name_encodings, f)
 
     def recognize_faces(self, image, model="hog"):
+        names = []
         start = time.time()
         with self.encodings_location.open(mode="rb") as f:
             loaded_encodings = pickle.load(f)
@@ -44,18 +45,11 @@ class FaceRecognizer:
             name = self._recognize_face(unknown_encoding, loaded_encodings)
             if not name:
                 name = "Unknown"
+            names.append(name)
             print(name, bounding_box)
             img = self._add_data(img, name, bounding_box)
 
-        return img
-
-    def _display_face(self, draw, bounding_box, name):
-        top, right, bottom, left = bounding_box
-        draw.rectangle(((left, top), (right, bottom)), outline="green")
-        text_left, text_top, text_right, text_bottom = draw.textbbox((left, bottom), name)
-
-        draw.rectangle(((text_left, text_top), (text_right, text_bottom)), fill="blue", outline="blue", )
-        draw.text((text_left, text_top), name, fill="white", )
+        return (img, names)
 
     def _add_data(self, input_image, name, bounding_box):
         top, right, bottom, left = bounding_box
@@ -86,7 +80,7 @@ class FaceRecognizer:
     def test(self, folder_path):
         for filename in os.listdir(folder_path):
             if filename.lower().endswith(('.png', '.jpg', 'jpeg')):
-                self.show(self.recognize_faces(cv2.imread(os.path.join(folder_path, filename))))
+                self.show(self.recognize_faces(cv2.imread(os.path.join(folder_path, filename)))[0])
 
     def live_feed(self):
         cap = cv2.VideoCapture(0)
@@ -111,7 +105,7 @@ class FaceRecognizer:
 
             cv2.putText(frame, f"FPS: {fps:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-            cv2.imshow('Video', self.recognize_faces(frame))
+            cv2.imshow('Video', self.recognize_faces(frame)[0])
 
             print(f"{(time.time() - start):.2f} s")
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -120,8 +114,15 @@ class FaceRecognizer:
         cap.release()
         cv2.destroyAllWindows()
 
+    def detect(self,img):
+        res = self.recognize_faces(img)
+        self.show(res[0])
+
+        return res[1]
+    
 if __name__ == '__main__':
     recognizer = FaceRecognizer()
-    # recognizer.encode_known_faces()
-    # recognizer.test()
-    recognizer.live_feed()
+#     # recognizer.encode_known_faces()
+#     # recognizer.test("testing")
+#     # recognizer.live_feed()
+    recognizer.detect(cv2.imread("testing/unknown.jpeg"))
